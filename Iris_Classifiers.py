@@ -37,7 +37,7 @@ X = df.drop("Species",axis=1)
 y = df["Species"]
 
 from sklearn.model_selection import train_test_split
-X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.25,random_state=15)
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.25,random_state=42)
 # scaler gerekmiyor olsa bile eğer gaussion naive bayes kullanıyor isek standardscaler yapmamız daha uygun olur 
 
 from sklearn.preprocessing import StandardScaler
@@ -62,10 +62,24 @@ logreg = LogisticRegression()
 logreg.fit(X_train_scaled,y_train)
 
 y_pred = logreg.predict(X_test_scaled)
-
+print("Logistic Regression Results")
 print("Accuracy Score: ",accuracy_score(y_test,y_pred))
 print("Classification_report: \n",classification_report(y_test,y_pred))
 print("Confusion_matrix: \n",confusion_matrix(y_test,y_pred))
+print("\n")
+
+from sklearn.svm import SVC
+svc = SVC()
+svc.fit(X_train_scaled, y_train)
+
+y_pred = svc.predict(X_test_scaled)
+
+print("SVC Results")
+print("Accuracy Score: ",accuracy_score(y_test,y_pred))
+print("Classification_report: \n",classification_report(y_test,y_pred))
+print("Confusion_matrix: \n",confusion_matrix(y_test,y_pred))
+print("\n")
+
 
 model = LogisticRegression()
 penalty = ['l1', 'l2', 'elasticnet'] 
@@ -81,6 +95,7 @@ randomcv = RandomizedSearchCV(estimator=model,param_distributions=params,cv=cv,s
 randomcv.fit(X_train_scaled,y_train)
 y_pred = randomcv.predict(X_test_scaled)
 
+print("Logistic Regression Hyperparameter Tuning Results")
 print("Accuracy Score: ",accuracy_score(y_test,y_pred))
 print("Classificaion Report: \n",classification_report(y_test,y_pred))
 print("Confusion Matrix: \n",confusion_matrix(y_test,y_pred))
@@ -91,7 +106,14 @@ print("randombest_score:",randomcv.best_score_)
 
 from sklearn.model_selection import GridSearchCV
 
-grid=GridSearchCV(estimator=model,param_grid=params,cv=cv,scoring='accuracy',n_jobs=-1)
+params = [
+    {"penalty": ["l2"], "solver": ["newton-cg", "lbfgs", "sag", "saga", "newton-cholesky"], "C": c_values},
+    {"penalty": ["l1"], "solver": ["liblinear", "saga"], "C": c_values},
+    {"penalty": ["elasticnet"], "solver": ["saga"], "C": c_values, "l1_ratio": [0.5]} 
+]
+
+grid = GridSearchCV(estimator=model, param_grid=params, cv=cv, scoring="accuracy", n_jobs=-1)
+
 grid.fit(X_train_scaled,y_train)
 
 y_pred = grid.predict(X_test_scaled)
@@ -103,5 +125,11 @@ print("Confusion_matrix: \n",confusion_matrix(y_test,y_pred))
 print(grid.best_params_)
 print(grid.best_score_)
 
-sns.scatterplot(x=y_test,y=y_pred)
+cm = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+plt.xlabel("Predicted Classes")
+plt.ylabel("Real Classes")
+plt.title("Confusion Matrix Heatmap")
 plt.show()
