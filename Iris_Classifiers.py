@@ -138,7 +138,6 @@ plt.ylabel("Real Classes")
 plt.title("Log_Reg - Confusion Matrix Heatmap")
 plt.show()
 
-from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 
 svc_params = {
