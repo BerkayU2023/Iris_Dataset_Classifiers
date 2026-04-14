@@ -82,17 +82,21 @@ print("\n")
 
 
 model = LogisticRegression()
-penalty = ['l1', 'l2', 'elasticnet'] 
 c_values = [1000,100,10,1,0.1,0.01] 
 
-solver = ['newton-cg','lbfgs', 'liblinear', 'sag', 'saga','newton-cholesky']
-params = dict(penalty=penalty,C=c_values,solver = solver)
-
 # {'penalty': ['l1', 'l2', 'elasticnet'], 'C': [100, 10, 1, 0.1, 0.01], 'solver': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga', 'newton-cholesky']} 
-from sklearn.model_selection import RandomizedSearchCV,StratifiedKFold
+from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
+
 cv = StratifiedKFold()
-randomcv = RandomizedSearchCV(estimator=model,param_distributions=params,cv=cv,scoring="accuracy")
-randomcv.fit(X_train_scaled,y_train)
+
+params = [
+    {"penalty": ["l2"], "solver": ["newton-cg", "lbfgs", "sag", "saga", "newton-cholesky"], "C": c_values},
+    {"penalty": ["l1"], "solver": ["liblinear", "saga"], "C": c_values},
+    {"penalty": ["elasticnet"], "solver": ["saga"], "C": c_values, "l1_ratio": [0.5]} 
+]
+
+randomcv = RandomizedSearchCV(estimator=model, param_distributions=params, cv=cv, scoring="accuracy")
+randomcv.fit(X_train_scaled, y_train)
 y_pred = randomcv.predict(X_test_scaled)
 
 print("Logistic Regression Hyperparameter Tuning Results")
@@ -131,5 +135,39 @@ plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
 plt.xlabel("Predicted Classes")
 plt.ylabel("Real Classes")
-plt.title("Confusion Matrix Heatmap")
+plt.title("Log_Reg - Confusion Matrix Heatmap")
+plt.show()
+
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+
+svc_params = {
+    "C": [0.1, 1, 10, 100, 1000],
+    "gamma": [1, 0.1, 0.01, 0.001],
+    "kernel": ["rbf", "linear"]
+}
+
+svc_model = SVC()
+
+grid_svc = GridSearchCV(estimator=svc_model, param_grid=svc_params, cv=cv, scoring="accuracy", n_jobs=-1)
+
+grid_svc.fit(X_train_scaled, y_train)
+
+y_pred_svc = grid_svc.predict(X_test_scaled)
+
+print("SVC Hyperparameter Tuning Sonuçları")
+print("-----------------------------------")
+print("En İyi Parametreler:", grid_svc.best_params_)
+print("En İyi Çapraz Doğrulama Skoru (Eğitim):", grid_svc.best_score_)
+print("\nTest Seti Accuracy Score:", accuracy_score(y_test, y_pred_svc))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_svc))
+
+
+cm_svc = confusion_matrix(y_test, y_pred_svc)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm_svc, annot=True, fmt="d", cmap="Greens") 
+plt.xlabel("Predicted Classes")
+plt.ylabel("Real Classes")
+plt.title("SVC - Confusion Matrix Heatmap")
 plt.show()
