@@ -43,7 +43,7 @@ Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları t
 
 3.  Ana Python dosyasını çalıştırın:
     ```bash
-    python main.py
+    Iris_Classifiers.py
     ```
 
 ## Proje Adımları
